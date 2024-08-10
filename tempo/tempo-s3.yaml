@@ -1,0 +1,64 @@
+server:
+  http_listen_port: 3200
+
+distributor:
+  receivers:
+    jaeger:
+      protocols:
+        thrift_http:
+        grpc:
+        thrift_binary:
+        thrift_compact:
+    zipkin:
+    otlp:
+      protocols:
+        http:
+        grpc:
+    opencensus:
+
+ingester:
+  max_block_duration: 5m
+
+compactor:
+  compaction:
+    compaction_window: 24h
+    block_retention: 36h
+
+metrics_generator:
+
+  processor:
+    service_graphs:
+      histogram_buckets: [0.1, 0.2, 0.5, 1, 2, 5, 10]
+    span_metrics:
+      dimensions:
+        - http.method
+        - http.target
+  registry:
+    external_labels:
+      source: tempo
+      cluster: docker-compose
+  storage:
+    path: /var/tempo/generator/wal
+    remote_write:
+      - url: ${PROMETHEUS_URL}/api/v1/write
+        send_exemplars: true
+
+storage:
+  trace:
+    backend: s3
+    wal:
+      path: /var/tempo/wal
+    local:
+      path: /var/tempo/blocks
+    s3:
+      bucket: ${S3_BUCKET}
+      endpoint: ${S3_ENDPOINT}
+      region: ${S3_REGION}
+      access_key: ${S3_ACCESS_KEY}
+      secret_key: ${S3_SECRET_KEY}
+      insecure: false
+
+overrides:
+  defaults:
+    metrics_generator:
+      processors: [service-graphs, span-metrics]
