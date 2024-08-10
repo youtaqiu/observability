@@ -1,0 +1,27 @@
+name: Build Tempo Docker Image
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+
+    # 登录 Docker Hub (如果需要推送镜像)
+    - name: Log in to Docker Hub
+      run: echo "${{ secrets.DOCKER_HUB_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_HUB_USERNAME }}" --password-stdin
+
+    # 构建 Docker 镜像
+    - name: Build the Docker image
+      run: docker build . --file Dockerfile --tag youtaqiu/tempo:latest
+      working-directory: ./tempo
+      
+    # 推送 Docker 镜像到 Docker Hub (如果需要)
+    - name: Push Docker image
+      run: docker push youtaqiu/tempo:latest
