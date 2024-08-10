@@ -38,15 +38,15 @@ datasources:
         tags: ['job', 'instance', 'pod', 'namespace', 'hostname']
         mappedTags: [ { key: 'service.name', value: 'app' }  ]
         mapTagNamesEnabled: true
-        filterByTraceID: false
-        filterBySpanID: false
+        filterByTraceID: true
+        filterBySpanID: true
         lokiSearch: true
         customQuery: true
         query: 'method="$${__span.tags.method}"'
       tracesToMetrics:
         datasourceUid: 'prometheus-labs'
-        spanStartTimeShift: '1h'
-        spanEndTimeShift: '-1h'
+        spanStartTimeShift: '-1h'
+        spanEndTimeShift: '1h'
         tags: [{ key: 'service.name', value: 'service' }, { key: 'job' }, { key: 'app' }]
         queries:
           - name: 'Sample query'
