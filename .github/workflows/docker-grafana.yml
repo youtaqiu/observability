@@ -19,8 +19,9 @@ jobs:
 
     # 构建 Docker 镜像
     - name: Build the Docker image
-      run: docker build . --file grafana/Dockerfile --tag youtaqiu/grafana:latest
-
+      run: docker build . --file Dockerfile --tag youtaqiu/grafana:latest
+      working-directory: ./grafana
+      
     # 推送 Docker 镜像到 Docker Hub (如果需要)
     - name: Push Docker image
       run: docker push youtaqiu/grafana:latest
