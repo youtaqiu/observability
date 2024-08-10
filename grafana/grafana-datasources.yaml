@@ -1,0 +1,91 @@
+apiVersion: 1
+
+datasources:
+  - name: Prometheus
+    type: prometheus
+    uid: prometheus-labs
+    access: proxy
+    orgId: 1
+    url: ${PROMETHEUS_URL}
+    basicAuth: false
+    isDefault: false
+    version: 1
+    editable: true
+    jsonData:
+      httpMethod: GET
+      exemplarTraceIdDestinations:
+        - name: trace_id
+          datasourceUid: tempo-query
+  - name: 'Tempo'
+    type: tempo
+    access: proxy
+    orgId: 1
+    url: ${TEMPO_URL}
+    basicAuth: false
+    basicAuthUser: ${TEMPO_USER}
+    isDefault: false
+    version: 1
+    editable: true
+    apiVersion: 1
+    uid: tempo-query
+    secureJsonData:
+      basicAuthPassword: ${TEMPO_PASSWORD}
+    jsonData:
+      tracesToLogsV2:
+        datasourceUid: 'loki-labs'
+        spanStartTimeShift: '-1h'
+        spanEndTimeShift: '1h'
+        tags: ['job', 'instance', 'pod', 'namespace', 'hostname']
+        mappedTags: [ { key: 'service.name', value: 'app' }  ]
+        mapTagNamesEnabled: true
+        filterByTraceID: false
+        filterBySpanID: false
+        lokiSearch: true
+        customQuery: true
+        query: 'method="$${__span.tags.method}"'
+      tracesToMetrics:
+        datasourceUid: 'prometheus-labs'
+        spanStartTimeShift: '1h'
+        spanEndTimeShift: '-1h'
+        tags: [{ key: 'service.name', value: 'service' }, { key: 'job' }, { key: 'app' }]
+        queries:
+          - name: 'Sample query'
+            query: 'sum(rate(traces_spanmetrics_latency_bucket{$$__tags}[5m]))'
+      serviceMap:
+        datasourceUid: 'prometheus-labs'
+      nodeGraph:
+        enabled: true
+      search:
+        hide: false
+      traceQuery:
+        timeShiftEnabled: true
+        spanStartTimeShift: '1h'
+        spanEndTimeShift: '-1h'
+      spanBar:
+        type: 'Tag'
+        tag: 'http.path'
+  - name: Loki
+    type: loki
+    uid: loki-labs
+    access: proxy
+    orgId: 1
+    url: ${LOKI_URL}
+    basicAuth: ${LOKI_AUTH}
+    basicAuthUser: ${LOKI_USER}
+    isDefault: true
+    version: 1
+    editable: true
+    apiVersion: 1
+    jsonData:
+      httpHeaderName1: "X-Scope-OrgID"
+      derivedFields:
+        - datasourceUid: tempo-query
+          matcherRegex: "traceID=(\\w+)"
+          name: TraceID
+          url: $${__value.raw}
+          urlDisplayLabel: 'View Trace'
+    secureJsonData:
+      basicAuthPassword: ${LOKI_PASSWORD}
+      httpHeaderValue1: ${LOKI_TENANT_ID}
+
+
