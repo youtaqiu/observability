@@ -1,4 +1,4 @@
-name: Build Loki Docker Image
+name: Build Pyroscope Docker Image
 
 on:
   push:
